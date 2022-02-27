@@ -40,7 +40,7 @@ The above example demonstrates the two core features of Vue:
 
 ### Single-File Components
 
-- It also known as `*.vue` files, abbreviated as SFC.
+- It also knew as `*.vue` files, abbreviated as SFC.
 - It encapsulates the component’s logic, template, and styles in single file.
 
 Here’s the previous example, written in SFC format:
@@ -244,7 +244,7 @@ app.mount('#app')
 
 App root component’s content will be rendered inside the element.
 
-App instance exposes a `.config` object that allows us to configure a few app-level options, for example an app-level erro handler:
+App instance exposes a `.config` object that allows us to configure a few app-level options, for example an app-level error handler:
 
 ```other
 app.config.errorHandler = (err) => {
@@ -262,4 +262,52 @@ app.component('TodoDeleteButton', TodoDeleteButton)
 
 More APIs is in API reference.
 
+## Template Syntax
 
+The HTML-based template syntax can be compiled into highly-optimized JavaScript code with the reactivity system.
+you can also directly write render function instead of templates with optional JSX support.
+
+* text interpolation: `{{ msg }}`
+* raw HTML: `<span v-html="<span style='color:red'>This should be red</span>"></span>`
+* attribute bindings: `<div v-bind:id="dynamicId"></div>` or `<div :id="dynamicId"></div>`
+* boolean attributes: `<button :disabled="isButtonDisabled>Button</button>`
+
+Each binding can only contain one single expression, so a statement will not work.
+
+Template expression are sandbox and only have access to a restricted list of globals such as Math and Date.
+Globals that not included in the list can be defined as additional globals for all VUe expressions by adding them to 
+`app.config.globalProperties`.
+
+Directives:
+
+* v-html
+* v-bind: v-bind can be condensed into a single character, `:`.
+* v-for: v-on can be condensed into a single character, `@`.
+* v-on
+* v-slot
+
+Dynamic Argument
+* example:
+
+```vue
+<a v-bind:[attributeName]="url">...</a>
+<a :[attributeName]="url">...</a>
+<a v-on:[eventName]="doSomething">...</a>
+<a @[eventName]="doSomething">...</a>
+```
+* Spaces and quotes are invalid in side HTML attribute names.
+* naming attribute names with lowercase instead of uppercase.
+
+modifiers
+
+* v-on.prevent: call event.preventDefault().
+...
+
+Finally, here's the full directive syntax visualized:
+
+`v-on:submit.precent="onSubmit"`
+
+* `v-on:` is the name.
+* `submit` is the argument.
+* `.prevent` is the modifiers.
+* `onSubmit` is the value.
