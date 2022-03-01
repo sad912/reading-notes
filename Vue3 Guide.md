@@ -311,3 +311,25 @@ Finally, here's the full directive syntax visualized:
 * `submit` is the argument.
 * `.prevent` is the modifiers.
 * `onSubmit` is the value.
+
+## Reactivity Fundamentals
+
+### Options API
+
+* With Options AIP, the data option can be used to declare reactive state of a component.
+* The data option should be a function that returns an object which will be wrapped in Vue reactivity system.
+* When creating a new component instance Vue will call the option data function.
+* We can use `this` attribute to visit these reactive content which are declared in data option.
+* These instance properties are only added when the instance is first created, ensure those properties exist in data option.
+* In Vue 3, data is made reactive by leveraging JavaScript Proxies. `this.xxx`' value is a reactive proxy of the original `xxx`
+* the methods option can be used to declare methods.
+* The methods option should be an object containing the desired methods.
+* In methods option, `this` points the component instance. avoid using arrow functions when defining methods.
+* DOM updates aren't applied synchronously. Instead, Vue buffers tem until the 'next tick' in the update cycle. nextTick()
+ global API can be used to wait for the DOM update to complete after a state change.
+* By default, the reactive state is deeply. It is also possible to explicitly create shallow reactive objects in advanced usage.
+* Stateful methods should be declared with lifecycle hook.
+
+### Composition API
+
+##Computed Properties
