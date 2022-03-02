@@ -332,4 +332,56 @@ Finally, here's the full directive syntax visualized:
 
 ### Composition API
 
+* With Composition API, `reactive()` function can be used to create a reactive object or array.
+
+```js
+import { reactive } from `vue`
+
+const state = reactive({ count: 0 })
+```
+
+* Reactive objects are JavaScript Proxies and behave just like normal objects.
+* To use reactive state in a component's template, declare and return them from a component's `setip()` function:
+```js
+import { reactive } from 'vue'
+
+export default {
+    setup() {  
+        const state = reactive({ count: 0 })
+        
+        function increment(){
+            state.count++
+        }
+        return { state, increament }
+    }
+}
+```
+```vue
+<div @click="increment">{{ state.count }}</div>
+```
+* When using Single-File Components, we can greatly simplify the usage with `<script setup>`.
+```vue
+<script setup>
+import { reactive } from 'vue'
+
+const state = reactive({ count: 0 })
+
+function increment(){
+  state.count++
+}
+</script> 
+```
+* The returned value from `reactive()` is a Proxy of the original object.
+* Calling `reactive()` on the same object always returns the same proxy, and calling reactive() on an existing proxy also 
+returns that same proxy. This rule applies to nested objects as well.
+* Two limitations of `reactive()`:
+  * work for object types instead of primitive types.
+  * can't easily replace and use a reactive object.
+* `ref()` function can be used to create reactive "refs" that can hold any types.
+* Reactive refs have a `.value` property.
+* We can use reactive refs's `.value` peoperty to maintain it's reactivity.
+* The Ref's top-level property can be unwrapped in template {{}}.
+* The ref as a property of a reactive object is  also automatically unwrapped.
+* Ref unwrapping only happens inside a deep reactive object instead of a shallow reactive object.
+* Arrays and Collections is no unwrapping feature.
 ##Computed Properties
