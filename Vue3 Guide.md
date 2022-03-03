@@ -384,4 +384,83 @@ returns that same proxy. This rule applies to nested objects as well.
 * The ref as a property of a reactive object is  also automatically unwrapped.
 * Ref unwrapping only happens inside a deep reactive object instead of a shallow reactive object.
 * Arrays and Collections is no unwrapping feature.
-##Computed Properties
+ 
+## Computed Properties
+
+* Complex logic should declared in the computed property.
+```js
+// Options API
+export default  {
+    computed: {
+        publishedBooksMessage() {
+            return this.author.book.length > 0 ? 'Yes' : 'No'
+        }
+    }
+}
+```
+```vue
+// Composition API
+<script>
+import { reactive, computed } from 'vue'
+
+const author = reactive({
+  name: 'John Doe'
+})
+
+const publishedBooksMessage = computed(() => {
+  return author.book.length > 0 ? 'Yes' : 'No'
+})
+</script>
+```
+* Vue is awarew that `this.publishedBooksMessage` depends on `this.author.books`, so it will update any bindings that depend
+ on `this.publishedBokksMessage` when `this.author.books` changes.
+* Compared with the same function as a method, computed properties are cashed based on their reactive dependencies. a method will always
+ run the function whenever a re-render happens.
+* Sometime you need a "writable" computed property, you can create one by providing both a getter and a setter:
+```js
+// Options API
+export default {
+    data() {
+        return {
+            firstName: 'John',
+            lastName: 'Doe'
+        }
+    },
+    computed: {
+        fullName: {
+            get() {
+                return this.firstName + ' ' + this.lastName
+            },
+            set(newValue) {
+                [this.firstName, this.lastName] = newValue.split(' ')
+            }
+        }
+    }
+}
+```
+```vue
+// Composition API
+<script setup>
+import {ref, computed } from 'vue'
+
+const firstName = ref('John')
+const lastName = ref('Doe')
+
+const fullName = computed({
+  get() {
+    return firstName.value + ' ' + lastName.value
+  },
+  set(newValue) {
+    [firstName.value, lastName.value] = newValue.split(' ')
+  }
+})
+</script>
+```
+
+* Now when you run `this.fullName = 'Jone Doe'`, the setter will be invoked and `this.firstName` and `this.lastName` will be updated accrodingly.
+
+### Best Practices
+* Getters should be side-effet free. It should only perform pure computation instead of such as some async requests and DOM mutation.
+* It does not make sense to mutate a computed value.
+
+## Class and Style Bindings
