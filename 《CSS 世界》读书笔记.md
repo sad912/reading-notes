@@ -94,4 +94,12 @@ input, textarea, img, video, object {
 35. 如何让元素支持 height:100% ?
     1. 设定显式的高度值。非绝对定位的元素宽高百分比是相对于 content box 计算的。
     2. 使用绝对定位。绝对定位的元素宽高百分比计算是相对于 padding box 计算的。
-36. 
+36. 在 CSS 世界中，min-width/max-width 出现的场景一定是自适应布局或流体布局中。
+37. width/height 的默认值是 auto，而 min-width/min-height 的初始值是 auto，max-width/max-height 的初始值是 none。
+38. max-width 优先级大于 width 的 !important。
+39. min-width 优先级大于 max-width。
+40. 使用 max-height 实现任意高度元素的展开收起动画。
+41. display 值为 `inline | inline-block | inline-table` 都为内联元素。
+42. 内敛原讼事的典型特征就是可以和文字在一行显示。
+43. 浮动元素脱离了文档流，非内联元素。
+44. 
