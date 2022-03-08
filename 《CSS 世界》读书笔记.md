@@ -100,6 +100,50 @@ input, textarea, img, video, object {
 39. min-width 优先级大于 max-width。
 40. 使用 max-height 实现任意高度元素的展开收起动画。
 41. display 值为 `inline | inline-block | inline-table` 都为内联元素。
-42. 内敛原讼事的典型特征就是可以和文字在一行显示。
+42. 内敛元素的典型特征就是可以和文字在一行显示。
 43. 浮动元素脱离了文档流，非内联元素。
-44. 
+
+# 第 4 章 盒尺寸四大家族
+1. 盒尺寸四大家族：content box、padding box、border box、margin box。
+2. img、object、video、iframe、input、canvas 和 textarea 等元素都是替换元素。
+3. 替换元素的特点：
+   1. 内容可替换。
+   2. 内容外观上不受页面上的 CSS 影响。
+   3. 有自己的尺寸。
+   4. 在很多 CSS 属性上有自己的一套表现规则，比如 vertical-align。
+4. 替换元素都是内联水平元素，但是替换元素的 display 值却是不一样的。
+5. 替换元素尺寸计算规则：
+   1. 替换元素的固有尺寸：替换内容原本的尺寸。例如图片、视频有自己的宽度和高度； 表单存在默认尺寸。
+   2. 替换元素的 HTML 尺寸：HTML 原生属性，例如 img 标签的 width 和 height 属性、input 标签的 size 属性、textarea 标签的 cols 和 rows 属性。
+   3. 替换元素的 CSS 尺寸：通过 CSS 改变尺寸。
+   4. 替换元素的尺寸优先级：CSS 尺寸 > HTML 尺寸 > 固有尺寸。
+   5. 替换元素的固有尺寸含有固定的宽高比，若仅设置了宽度或高度，元素依然按照固有的宽高比例显示。
+   6. 替换元素若无固有尺寸也没有设置具体尺寸，最终表现为宽度 300 像素，高度 150 像素。
+   7. 内联替换元素和块级替换元素使用上面同一套计算规则
+6. 看似替换元素的尺寸规则面面俱到、无懈可击，但最常用的 img 元素如果没有任何尺寸，元素并非 300px * 150px 而是在不同浏览器下尺寸不同。
+7. 在开发中，为了提高性能以及节约带宽费用，首屏以下的图片会通过滚屏加载的方式异步加载，往往会使用占位图片。实现方式：`<img>`, `img { visibility: hidden; }`
+8. 图片资源的固有尺寸是无法改变的。
+9. CSS3 中，某些替换内容的适配方式可以通过 object-fit 属性修改了。
+10. 没用 src 属性的 img 元素是非替换元素。
+11. 利用可替换元素伪类失效和无 src 属性的 img 标签类似一个内联标签规则可以实现「基于维雷元素的图片内容生成技术」：
+```css
+img::after {
+   content: attr(alt);
+   position: absolute;
+   bottom: 0;
+   width: 100%;
+   background-color: rgba(0,0,0,0.5);
+   transform: translateY(100%);
+   transition: transform .2s;
+}
+img:hover::after {
+   transform:translateY(0) ;
+}
+```
+11. CSS content 属性决定了是否为替换元素。
+12. img 标签的 content 属性设置为 url() 可以实现替换源 src 图片。
+13. 可以使用 content 属性将非替换元素设置为替换元素，实现显示效果和 SEO 效果兼得。
+14. content 文本的副作用
+    1. 无法复制；
+    2. 不能左右 empty 伪类；
+    3. 动态生成值无法获取；
