@@ -125,7 +125,7 @@ input, textarea, img, video, object {
 8. 图片资源的固有尺寸是无法改变的。
 9. CSS3 中，某些替换内容的适配方式可以通过 object-fit 属性修改了。
 10. 没用 src 属性的 img 元素是非替换元素。
-11. 利用可替换元素伪类失效和无 src 属性的 img 标签类似一个内联标签规则可以实现「基于维雷元素的图片内容生成技术」：
+11. 利用可替换元素伪类失效和无 src 属性的 img 标签类似一个内联标签规则可以实现「基于伪类元素的图片内容生成技术」：
 ```css
 img::after {
    content: attr(alt);
@@ -147,3 +147,78 @@ img:hover::after {
     1. 无法复制；
     2. 不能左右 empty 伪类；
     3. 动态生成值无法获取；
+15. 因为 CSS 中默认的 box-sizing 是 content-box，所有使用 padding 会增加元素的尺寸；
+16. 内联元素的 clientHeight 和 clientWidth 是 0；
+17. 内联元素 padding 垂直方向是有效的，但是对上下元素的原本布局没有任何影响。
+18. 利用内联元素的 padding 垂直方向是有效的特性，可以实现存在顶部 fixed 的导航的 hash 地址锚点区域的精确定位。
+19. padding 百分比值无论是水平方向还是垂直方向都是相对于宽度计算的，基于此特性，可以实现自适应等比例盒子的效果。
+```css
+/* 正方形 */
+div { padding: 50% }
+/* 宽高 2:1*/
+div { padding: 25% 50% }
+```
+20. 实现一个响应式头图：
+```css
+.wrapper {
+    padding: 10% 50%;
+    position: relative;
+}
+.wrapper > img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+}
+```
+21. 对于内联元素，padding 会断行，padding 区域是跟着内联盒模型中的行框盒子，若一行显示不了，则 padding 区域也会跟着换行，换行位置的上 padding
+会覆盖上行文，同时下行的下 padding 和上行的下 padding 会形成不规则的padding(也就是 padding 区域跟着内联行框走)。
+22. 空内联元素 padding 百分比值高宽不一是由于 strut 导致的。使用 `font-size: 0;` 解决。
+23. ol/ul 列表内置 padding-left；input/textarea 内置 padding；button 按钮内置 padding；radio/checkbox 无内置 padding；
+24. button 内置 padding 巨难控制，一个既语义良好且行为保留，同时 UI 效果棒兼容性好的 button 技巧如下：
+```html
+<button id="btn"></button>
+<label for="btn">按钮</label>
+```
+```css
+button {
+    position: absolute;
+    clip: rect(0 0 0 0);
+}
+label {
+    display: inline-block;
+    line-height: 20px;
+    padding: 10px;
+}
+```
+25. 不使用伪类元素可以利用实现某些特殊图形。例如”三道杠“和”双层圆点“。
+26. margin 大小可以为负数。
+27. 利用浮动和 margin 实现一侧顶宽的两栏适应布局效果。
+28. 利用负 margin 实现改变元素尺寸实现两端对齐布局效果。
+29. 使用子元素的 margin-bottom 来实现滚动容器的底部留白。
+30. 使用 `margin-bottom: -9999px` 和 `padding-bottom: 9999px` 或 `border-bottom: 9998px solid transparent` 配合父元素
+`overflow: hidden` 实现等高布局。
+31. 等高布局若无需兼容 IE6、7 ，推荐使用 table-cell 实现。
+32. 和 padding 一样， margin 的百分比值无论是水平方向还是垂直方向都是相对于宽度计算的。但是由于 margin 合并的存在，垂直方向往往需要双倍尺寸才能和 padding 的表现一致。
+33. 块级元素的上下边距有时会合并。
+34. 对于 margin-top 合并，解决方案如下（满足一个即可）：
+    1. 父元素设置为块状格式化上下文；
+    2. 父元素设置 border-top 值;
+    3. 父元素设置 padding-top 值；
+    4. 父元素和第一个子元素之间添加内联元素进行分隔。
+35. 对于 margin-bottom 合并，解决方案如下（满足一个即可）：
+    1. 父元素设置为块状格式化上下文；
+    2. 父元素设置 border-bottom 值；
+    3. 父元素和最后一个子元素之间添加内联元素进行分隔；
+    4. 父元素设置 height、min-height 或 max-height。
+36. 通过设置overflow: hidden 会使元素设置为块状格式化上下文。
+37. 空块级元素 margin 合并。
+38. margin 合并规则：正正取大值，正负值相加，负负最负值。
+39. margin:auto 的填充规则：
+    1. 如果一侧定值，一侧 auto，则 auto 为剩余空间大小。
+    2. 如果两侧均是 auto，则评分剩余空间。
+40. 块状元素右对齐的最佳实践是 margin-left:auto。
+41. 绝对定位元素的 margin: auto 实现水平垂直剧中。
+42. 替换元素设置 display: block，则 margin: auto 的计算规则同样适用。
+43. 
