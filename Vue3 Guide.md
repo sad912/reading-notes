@@ -24,7 +24,7 @@ createApp({
 ```
 
 ```html
-<div id="app> 
+<div id="app"> 
 	<button @click="count++">
 		Count is: {{ count }}
 	</button>
