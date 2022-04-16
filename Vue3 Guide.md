@@ -460,7 +460,7 @@ const fullName = computed({
 * Now when you run `this.fullName = 'Jone Doe'`, the setter will be invoked and `this.firstName` and `this.lastName` will be updated accrodingly.
 
 ### Best Practices
-* Getters should be side-effet free. It should only perform pure computation instead of such as some async requests and DOM mutation.
+* Getters should be side-effect free. It should only perform pure computation instead of such as some async requests and DOM mutation.
 * It does not make sense to mutate a computed value.
 
 ## Class and Style Bindings
