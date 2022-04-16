@@ -23,7 +23,7 @@ createApp({
 }).mount('#app')
 ```
 
-```other
+```html
 <div id="app> 
 	<button @click="count++">
 		Count is: {{ count }}
@@ -45,7 +45,7 @@ The above example demonstrates the two core features of Vue:
 
 Here’s the previous example, written in SFC format:
 
-```other
+```vue
 <script>
 export default {
 	data() {
@@ -73,7 +73,7 @@ button {
 
 - Options API
 
-```other
+```vue
 <script>
 export default {
   // Properties returned from data() becomes reactive state
@@ -110,7 +110,7 @@ export default {
 
 - Composition AIP
 
-```other
+```vue
 <script setup>
 import { ref, onMounted } from 'vue'
 
@@ -166,7 +166,7 @@ Run `npm run build` to ship your app to production.
 
 copy simply the following code into an HTML file:
 
-```other
+```vue
 <script src="https://unpkg.com/vue@3"></script>
 
 <div id="app">{{ message }}</div>
@@ -186,7 +186,7 @@ The above example exposed the global `Vue` variable.
 
 But if use Vue over native ES modules, following HTML instead:
 
-```other
+```vue
 <script type="importmap">
   {
     "imports": {
@@ -220,7 +220,7 @@ Then run `npx serve` form the command line in the directory where your HTML file
 
 `createApp` function is used to create an application instance.
 
-```other
+```javascript
 import { createApp } from 'vue'
 
 const app = createApp({
@@ -234,11 +234,11 @@ Every app requires a root component that can contain other components as its chi
 
 App’s m`ount()` method is used to accept a DOM element or a selector string, and the method’s return value is the root component instance.
 
-```other
+```html
 <div id='app'></div>
 ```
 
-```other
+```javascript
 app.mount('#app')
 ```
 
@@ -246,7 +246,7 @@ App root component’s content will be rendered inside the element.
 
 App instance exposes a `.config` object that allows us to configure a few app-level options, for example an app-level error handler:
 
-```other
+```javascript
 app.config.errorHandler = (err) => {
 	/* handle error */
 }
@@ -254,7 +254,7 @@ app.config.errorHandler = (err) => {
 
 App instance also provides a few methods for registering app-scoped assets, for example, registering a component:
 
-```other
+```javascript
 app.component('TodoDeleteButton', TodoDeleteButton)
 ```
 
@@ -289,7 +289,7 @@ Directives:
 Dynamic Argument
 * example:
 
-```vue
+```html
 <a v-bind:[attributeName]="url">...</a>
 <a :[attributeName]="url">...</a>
 <a v-on:[eventName]="doSomething">...</a>
@@ -334,7 +334,7 @@ Finally, here's the full directive syntax visualized:
 
 * With Composition API, `reactive()` function can be used to create a reactive object or array.
 
-```js
+```javascript
 import { reactive } from `vue`
 
 const state = reactive({ count: 0 })
@@ -342,7 +342,7 @@ const state = reactive({ count: 0 })
 
 * Reactive objects are JavaScript Proxies and behave just like normal objects.
 * To use reactive state in a component's template, declare and return them from a component's `setip()` function:
-```js
+```javascript
 import { reactive } from 'vue'
 
 export default {
@@ -356,7 +356,7 @@ export default {
     }
 }
 ```
-```vue
+```html
 <div @click="increment">{{ state.count }}</div>
 ```
 * When using Single-File Components, we can greatly simplify the usage with `<script setup>`.
@@ -388,7 +388,7 @@ returns that same proxy. This rule applies to nested objects as well.
 ## Computed Properties
 
 * Complex logic should declared in the computed property.
-```js
+```javascript
 // Options API
 export default  {
     computed: {
@@ -417,7 +417,7 @@ const publishedBooksMessage = computed(() => {
 * Compared with the same function as a method, computed properties are cashed based on their reactive dependencies. a method will always
  run the function whenever a re-render happens.
 * Sometime you need a "writable" computed property, you can create one by providing both a getter and a setter:
-```js
+```javascript
 // Options API
 export default {
     data() {
