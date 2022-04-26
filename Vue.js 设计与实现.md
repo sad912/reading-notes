@@ -289,6 +289,202 @@ function mountComponent(vnode, container) {
 
 # 第二篇 响应系统
 ## 第 4 章 响应系统的作用与实现
+### 概述
+1. 响应系统是 Vue.js 的重要组成部分。
+2. 本章会先讨论什么是响应式数据和副作用函数，然后会实现一个相对完善的相应系统。
+3. 这个过程会遇到一些问题，例如如何避免无限递归？为什么需要嵌套的副作用函数？两个副作用函数会产生哪些影响？以及其他细节。
+4. Vue.js 3 采用 Proxy 实现响应式数据。
+5. 本章会详细讨论如何根据语言规范实现对数据对象的代理，以及其中的一些重要细节。
+### 响应式数据与副作用函数
+1. 如果一个函数的执行会间接直接影响其他函数的执行，我们就称这个函数为副函数。
+2. 在一个副作用函数中读取了某个对象的属性，当对象的属性发生变化的时候，副作用函数会重新执行，此时，这个对象的属性就是响应式的。
+### 响应式数据的基本实现
+1. 我们通过拦截一个对象属性的读取和设置的操作，实现响应式。
+2. 在 ES2015 之前，Vue.js2 通过 `Object.defineProperty`；在 ES2015+ 后，Vue.js 3 采用代理对象 Proxy 实现。
+3. 一个简单的 Proxy 实现思路。
+```javascript
+// 存储副作用函数的桶
+const bucket = new Set()
 
+// 原始数据
+const data = { text: 'hello world' }
+// 对原始数据的代理
+const obj = new Proxy(data, {
+    get(target, key) {
+        bucket.add(effect)
+        return target[key]
+    },
+    set(target, key, newVal) {
+        target[key] = newVal
+        bucket.forEach(fn => fn())
+        // 返回 true 代表设置操作成功
+        return true
+    }
+})
+
+// 副作用函数
+function effect() {
+    document.body.innerText = obj.text
+}
+```
+
+4. 我们创建了一个用于存储副作用函数的 Set 类型的桶 bucket，并且定义了原始数据类型 data，并使用 Proxy 对原始数据进行代理，obj 作为代理对象。
+5. 我们对代理对象设置了 get 和 set 的拦截函数。当读取属性时，我们将副作用函数添加到桶里，返回返回属性值；当设置属性时，我们先更新原始数据值，再执行副作用函数。
+6. 这种方案有很多缺陷，比如 effect 作为副作用函数很不灵活。
+### 设计一个完善的响应系统
+1. 响应式系统的工作流程
+   1. 当读取操作发生时，将副作用函数收集到桶里。
+   2. 当设置操作发生时，从桶中取出副作用函数并执行。
+2. 先前代码里，我们把副作用函数明明为 effect，其实我们更希望的是，哪怕是一个匿名函数，也能够收集到 bucket 里，所以我们需要提供一个用来注册副作用函数的机制。
+3. 我们使用全局变量 activeEffect 来存储被注册的副作用函数，activeEffect 变量的初始值为 `undefined` ；使用 effect 函数用于注册副作用函数，参数 fn 为要注册的函数。
+```javascript
+let activeEffect 
+function effect(fn) {
+    activeEffect = fn
+    fn()
+}
+effect(()=> {
+    document.body.innerText = obj.text
+})
+```
+
+4. 使用 effect 函数来注册副作用函数，解决了先前任意函数名且可以为匿名函数的问题。
+5. 在 effect 函数里，首先我们将注册函数赋值给了 activeEffect 全局变量，这解决了如何将具名和匿名副作用函数放入 bucket 问题；其次我们执行了传入的副作用函数，这将会触发响应式数据的读取操作，进而触发代理对象的 get 拦截函数。
+6. 修改 Proxy 代理函数为：
+```javascript
+const obj = new Proxy(data, {
+    get(target, key) {
+        activeEffect && bucket.add(activeEffect)
+        return target[key]
+    },
+    set(target, key, newVal) {
+        target[key] = newVal
+        bucket.forEach(fn => fn())
+        // 返回 true 代表设置操作成功
+        return true
+    }
+})
+```
+
+7. 至此，响应系统就不依赖副作用函数的名字了。
+8. 当我们修改一个响应式对象中不存在的属性的时候，由于未曾读取过此不存在属性，理论上，bucket 里的副作用函数不应该被重新执行，但是事实上，由于触发了代理对象的 get 拦截方法，bucket 里的副作用函数还是会被全部重新执行。
+9. 上述问题的根本原因是：没有在副作用函数和被操作的目标字段之间建立明确的联系。
+10. 解决上述问题的方法是重新设计“桶”的数据结构。
+11. 具体分析，响应对象、属性、副作用函数的关系其实是个树形结构，如下：
+```
+-obj1
+    -atrr1
+        -effectFn1
+        -effectFn2
+    -atrr2
+        -effectFn3
+-obj2
+    -atrr1
+        -effctF1
+```
+
+12. 我们使用 WeakMap 来代替 Set 作为桶的数据结构，然后修改代理拦截器代码。
+```javascript
+const bucket = new WeakMap()
+
+const obj = new Proxy(data, {
+    get(target, key) {
+        if (!activeEffect) return target[key]
+        
+        let depsMap = bucket.get(target)
+        !depsMap && bucket.set(target, (depsMap = new Map()))
+        
+        let deps = depsMap.get(key)
+        !deps && depsMap.set(key, (deps = new Set()))
+        
+        deps.add(activeEffect)
+        
+        return target[key]
+    },
+    set(target, key, newVal) {
+        target[key] = newVal
+        
+        const depsMap = bucket.get(target)
+        if (!depsMap) return 
+        const effects = depsMap.get(key)
+        effects && effects.forEach(fn => fn())
+    }
+})
+```
+
+13. 其中 WeakMap 用于存储响应式对象，键为原始对象，值为一个 Map 实例；Map 用于存储原始对象的响应式属性，键为属性名，值为一个由此属性副作用函数组成的 Set 实例。
+14. 为什么使用 WeakMap？这涉及 WeakMap 和 Map 的区别。
+    1. Map 对 key 的引用是强引用，所以垃圾回收器不会回收被 Map 引用的对象；
+    2. WeakMap 对 key 是弱引用，如果被引用的部分没有任何强引用了，那么垃圾回收器就会把这部分从内存中删除；
+    3. 上述场景中，如果 target 对象没有任何引用了，就说明这个对象不再被需要了，这时应该被内存回收；
+    4. 相反，如果用 Map 来实现，即使此 target 对象没有任何引用了，也不会被回收，最终可能导致内存溢出；
+15. 为了便于阅读和提高可维护性，对代理函数进行一定的逻辑封装。
+```javascript
+const obj = new Proxy(data, {
+    get(target, key) {
+        track(target, key)
+        return target[key]
+    },
+    set(target, key, newVal) {
+        target[key] = newVal
+        trigger(target, key)
+   }
+})
+
+function track (target, key) {
+    if (!activeEffect) return 
+
+    let depsMap = bucket.get(target)
+    !depsMap && bucket.set(target, (depsMap = new Map()))
+
+    let deps = depsMap.get(key)
+    !deps && depsMap.set(key, (deps = new Set()))
+
+    deps.add(activeEffect)
+}
+
+function trigger(target, key) {
+    const depsMap = bucket.get(target)
+    if (!depsMap) return
+    const effects = depsMap.get(key)
+    effects && effects.forEach(fn => fn())
+}
+```
+
+16. 我们将 get 拦截函数里把副作用函数收集到“桶”里的这部分逻辑封装到 track 函数里，将触发副作用函数重新执行的逻辑封装到 trigger 函数里。
+
+### 分支切换与 cleanup
+1. 如果 effectFn 函数内部使用了包含响应属性的三目表达式，执行的语句中的响应属性的副作用函数添加到了 buket 中，当判断条件改变了的时候，原先分支中的响应属性可能不会执行，但当我们改变这个响应属性值的时候，会触发属性代理的 set 拦截函数，使得副作用函数重新执行。
+2. 这种情况下副作用函数和两个分支的响应式数据都建立了联系，当无论哪个分支的响应式数据发生变化的时候，副作用函数都会重复执行。
+3. 解决这个问题的思路是：每次副作用函数执行时，我们可以把它从所有与之关联的依赖集合删除。
+4. 因此我们首先重新设计副作用函数，添加副作用函数的 deps 数组，用于收集与该副作用函数有关的依赖集合。
+```javascript
+let activeEffect
+function effect(fn) {
+    const effectFn = () => {
+        activeEffect = effectFn
+        fn()
+    }
+    effectFn.deps = []
+    effectFn()
+}
+```
+
+5. 然后我们在 track 函数中将属性副作用函数 Set 集合 push 进副作用函数的 deps 数组中。
+```javascript
+function track (target, key) {
+    if (!activeEffect) return 
+
+    let depsMap = bucket.get(target)
+    !depsMap && bucket.set(target, (depsMap = new Map()))
+
+    let deps = depsMap.get(key)
+    !deps && depsMap.set(key, (deps = new Set()))
+
+    deps.add(activeEffect)
+}
+```
+
+6. 
 ## 第 5 章 非原始值的响应式方案
-## 第 6 章 原始值的响应式方案 
+## 第 6 章 原始值的响应式方案
