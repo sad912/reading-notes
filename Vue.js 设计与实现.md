@@ -456,17 +456,24 @@ function trigger(target, key) {
 ### 分支切换与 cleanup
 1. 如果 effectFn 函数内部使用了包含响应属性的三目表达式，执行的语句中的响应属性的副作用函数添加到了 buket 中，当判断条件改变了的时候，原先分支中的响应属性可能不会执行，但当我们改变这个响应属性值的时候，会触发属性代理的 set 拦截函数，使得副作用函数重新执行。
 2. 这种情况下副作用函数和两个分支的响应式数据都建立了联系，当无论哪个分支的响应式数据发生变化的时候，副作用函数都会重复执行。
-3. 解决这个问题的思路是：每次副作用函数执行时，我们可以把它从所有与之关联的依赖集合删除。
-4. 因此我们首先重新设计副作用函数，添加副作用函数的 deps 数组，用于收集与该副作用函数有关的依赖集合。
+3. 解决这个问题的思路是：每次副作用函数执行时，我们可以先把它从所有与之关联的依赖集合删除，当副作用函数执行完后，当前执行语句相关联的依赖集合会重新建立联系。
+4. 因此我们首先重新设计副作用函数，添加副作用函数的 deps 数组，用于收集与该副作用函数有关的依赖集合，同时，执行 `cleanup` 函数清除所以与当前副作用函数关联的依赖集合。
+5. `cleanup` 函数通过遍历副作用函数的 deps 数组，将每一个和当前副作用函数相关联的依赖集合中的副作用函数删除，同时清空 deps 数组。
 ```javascript
 let activeEffect
 function effect(fn) {
     const effectFn = () => {
+        cleanup(effectFn)
         activeEffect = effectFn
         fn()
     }
     effectFn.deps = []
     effectFn()
+}
+
+function cleanup(effectFn) {
+    effectFn.deps.forEach(deps => deps.delete(effectFn))
+    effectFn.deps.length = 0
 }
 ```
 
@@ -485,6 +492,16 @@ function track (target, key) {
 }
 ```
 
-6. 
+6. 但此时如果执行副作用函数，会调用 `cleanup` 函数，实现删除集合元素再添加集合元素，此行为会导致调用 forEach 遍历 Set 集合操作进入无限循环。
+7. 我们可以构造另一个用于遍历的 Set 集合来解决此问题。
+```javascript
+function trigger(target, key) {
+    const depsMap = bucket.get(target)
+    if (!depsMap) return
+    const effects = depsMap.get(key)
+    const effectsToRun = new Set(effects)
+    effectsToRun.forEach(effectFn => effectFn())
+}
+```
 ## 第 5 章 非原始值的响应式方案
 ## 第 6 章 原始值的响应式方案
